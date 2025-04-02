@@ -1,47 +1,63 @@
-import { useForm } from 'react-hook-form'
-
-type LoginFormInputs = {
-    username: string
-    password: string
-}
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import './LoginPage.css'
 
 const LoginPage = () => {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors }
-    } = useForm<LoginFormInputs>()
+    const [username, setUsername] = useState('')
+    const [password, setPassword] = useState('')
+    const navigate = useNavigate()
 
-    const onSubmit = (data: LoginFormInputs) => {
-        console.log('Login data:', data)
-        // Здесь позже добавим запрос к API
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            })
+
+            if (!response.ok) {
+                throw new Error('Invalid credentials')
+            }
+
+            const data = await response.json()
+            localStorage.setItem('token', data.accessToken)
+            navigate('/wishlist')
+        } catch (error) {
+            alert('Login failed. Please try again.')
+        }
     }
 
     return (
-        <div style={{ maxWidth: '400px', margin: '50px auto' }}>
-            <h1>Login</h1>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <div>
-                    <label>Username</label>
+        <div className="login-container">
+            <h2>LOG IN</h2>
+            <form className="login-form" onSubmit={handleSubmit}>
+                <div className="input-group">
                     <input
-                        {...register('username', { required: 'Username is required' })}
                         type="text"
+                        placeholder="Username"
+                        value={username}
+                        onChange={e => setUsername(e.target.value)}
+                        required
                     />
-                    {errors.username && <p>{errors.username.message}</p>}
                 </div>
-
-                <div>
-                    <label>Password</label>
+                <div className="input-group">
                     <input
-                        {...register('password', { required: 'Password is required' })}
                         type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        required
                     />
-                    {errors.password && <p>{errors.password.message}</p>}
                 </div>
-
-                <button type="submit" style={{ marginTop: '10px' }}>
-                    Login
-                </button>
+                <button type="submit" className="login-btn">Log in</button>
+                <div className="login-links">
+                    <a href="/register">Register</a>
+                    <a href="#">Forgot your password?</a>
+                </div>
             </form>
         </div>
     )

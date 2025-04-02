@@ -1,0 +1,68 @@
+/* LoginPage.css */
+
+.login-container {
+    max-width: 350px;
+    margin: 60px auto;
+    padding: 25px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.1);
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.login-container h2 {
+    margin-bottom: 20px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #333;
+}
+
+.login-form .input-group {
+    margin-bottom: 15px;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.login-btn {
+    width: 100%;
+    background: linear-gradient(to bottom, #fcd361, #f9a825);
+    border: 1px solid #e3a004;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    box-sizing: border-box;
+}
+
+.login-btn:hover {
+    background: linear-gradient(to bottom, #f9a825, #fcd361);
+}
+
+.login-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    box-sizing: border-box;
+}
+
+.login-links a {
+    font-size: 13px;
+    color: #3366cc;
+    text-decoration: none;
+}
+
+.login-links a:hover {
+    text-decoration: underline;
+}
