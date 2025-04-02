@@ -52,3 +52,27 @@ export default tseslint.config({
   },
 })
 ```
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and adjust values as needed:
+
+```bash
+  cp .env.example .env
+```
+
+| Variable         | Description                     | Default                       |
+|------------------|---------------------------------|-------------------------------|
+| `VITE_API_URL`   | Backend API base URL            | `http://localhost:8080/api`   |
+| `VITE_APP_TITLE` | App title shown in browser tab  | `Wishlist App`                |
+
+## Project Setup
+
+```bash
+  npm install
+  npm run dev
+```
+
+Access the app at [http://localhost:5173](http://localhost:5173).
+
+Make sure the backend is running and available at the API URL configured in `.env`.
