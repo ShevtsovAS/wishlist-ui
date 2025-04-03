@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import './LoginPage.css'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import {toast} from "react-toastify";
 
 const RegisterPage = () => {
     const [email, setEmail] = useState('')
@@ -23,7 +24,7 @@ const RegisterPage = () => {
             navigate('/login')
         } catch (error) {
             console.error('Registration error:', error)
-            alert('Registration failed. Please try again.')
+            toast.error('Registration failed. Please try again.')
         }
     }
 

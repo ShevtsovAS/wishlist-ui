@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './LoginPage.css'
+import {toast} from 'react-toastify'
 
 const LoginPage = () => {
     const [username, setUsername] = useState('')
@@ -27,7 +28,7 @@ const LoginPage = () => {
             localStorage.setItem('token', data.accessToken)
             navigate('/wishlist')
         } catch (error) {
-            alert('Login failed. Please try again.')
+            toast.error('Login failed. Please try again.')
         }
     }
 
