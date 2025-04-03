@@ -6,34 +6,48 @@ const WishlistPage = () => {
     const [wishes, setWishes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
-    const [currentPage, setCurrentPage] = useState(0)
+    const [page, setPage] = useState(0)
     const [totalPages, setTotalPages] = useState(0)
-
+    const [, setTotalItems] = useState(0)
+    const [pageSize] = useState(10)
     const [sortBy, setSortBy] = useState('createdAt')
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+    const [searchTerm, setSearchTerm] = useState('')
 
-    const pageSize = 10
+    useEffect(() => {
+        fetchWishes()
+    }, [page, sortBy, sortDir])
 
-    const fetchWishes = async (page: number) => {
+    const fetchWishes = async () => {
         const token = localStorage.getItem('token')
         setLoading(true)
 
         try {
-            const response = await axios.get('/api/wishes', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                },
-                params: {
-                    page,
-                    size: pageSize,
-                    sort: sortBy,
-                    direction: sortDir
-                }
-            })
+            const response = searchTerm.trim()
+                ? await axios.get('/api/wishes/search', {
+                    headers: { Authorization: `Bearer ${token}` },
+                    params: { term: searchTerm.trim() }
+                })
+                : await axios.get('/api/wishes', {
+                    headers: { Authorization: `Bearer ${token}` },
+                    params: {
+                        page,
+                        size: pageSize,
+                        sort: sortBy,
+                        direction: sortDir
+                    }
+                })
 
-            setWishes(response.data.wishes || [])
-            setTotalPages(response.data.totalPages)
-            setCurrentPage(response.data.currentPage)
+            if (searchTerm.trim()) {
+                setWishes(response.data)
+                setTotalItems(response.data.length)
+                setTotalPages(1)
+                setPage(0)
+            } else {
+                setWishes(response.data.wishes)
+                setTotalItems(response.data.totalItems)
+                setTotalPages(response.data.totalPages)
+            }
         } catch (err: any) {
             console.error(err)
             setError('Failed to fetch wishes')
@@ -42,9 +56,19 @@ const WishlistPage = () => {
         }
     }
 
-    useEffect(() => {
-        fetchWishes(currentPage)
-    }, [currentPage, sortBy, sortDir])
+    const handleSearch = () => {
+        setPage(0)
+        fetchWishes()
+    }
+
+    const toggleSortDirection = () => {
+        setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+    }
+
+    const handleSortChange = (newSort: string) => {
+        setSortBy(newSort)
+        setSortDir('asc') // reset to ascending when changing column
+    }
 
     if (loading) return <p>Loading...</p>
     if (error) return <p>{error}</p>
@@ -53,36 +77,32 @@ const WishlistPage = () => {
         <div className="wishlist-container">
             <h2>My Wishlist</h2>
 
-            {/* Сортировка */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <div>
-                    <label style={{ marginRight: 8 }}>Sort by:</label>
-                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                        <option value="createdAt">Created At</option>
-                        <option value="priority">Priority</option>
-                        <option value="dueDate">Due Date</option>
-                    </select>
-                </div>
-                <div>
-                    <label style={{ marginRight: 8 }}>Direction:</label>
-                    <select value={sortDir} onChange={(e) => setSortDir(e.target.value as 'asc' | 'desc')}>
-                        <option value="asc">Ascending</option>
-                        <option value="desc">Descending</option>
-                    </select>
-                </div>
+            <div className="wishlist-actions">
+                <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button onClick={handleSearch}>Search</button>
             </div>
 
+            {searchTerm && (
+                <div style={{ textAlign: 'center', marginTop: '10px', color: '#555' }}>
+                    🔍 Showing search results for: <strong>{searchTerm}</strong>
+                </div>
+            )}
             <table className="wishlist-table">
                 <thead>
                 <tr>
-                    <th>Title</th>
+                    <th onClick={() => handleSortChange('title')}>Title</th>
                     <th>Description</th>
-                    <th>Completed</th>
-                    <th>Priority</th>
-                    <th>Category</th>
-                    <th>Due Date</th>
+                    <th onClick={() => handleSortChange('completed')}>Completed</th>
+                    <th onClick={() => handleSortChange('priority')}>Priority</th>
+                    <th onClick={() => handleSortChange('category')}>Category</th>
+                    <th onClick={() => handleSortChange('dueDate')}>Due Date</th>
                     <th>Completed At</th>
-                    <th>Created At</th>
+                    <th onClick={() => handleSortChange('createdAt')}>Created At</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -90,27 +110,39 @@ const WishlistPage = () => {
                     <tr key={wish.id}>
                         <td>{wish.title}</td>
                         <td>{wish.description}</td>
-                        <td>{wish.completed ? 'Yes' : 'No'}</td>
+                        <td>{wish.completed ? '✅' : '❌'}</td>
                         <td>{wish.priority}</td>
                         <td>{wish.category}</td>
-                        <td>{wish.dueDate?.slice(0, 10)}</td>
-                        <td>{wish.completedAt?.slice(0, 10) || '-'}</td>
-                        <td>{wish.createdAt?.slice(0, 10)}</td>
+                        <td>{wish.dueDate?.slice(0, 16).replace('T', ' ')}</td>
+                        <td>{wish.completedAt?.slice(0, 16).replace('T', ' ') || '-'}</td>
+                        <td>{wish.createdAt?.slice(0, 16).replace('T', ' ')}</td>
                     </tr>
                 ))}
                 </tbody>
             </table>
 
-            {/* Пагинация */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-                <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))} disabled={currentPage === 0}>
-                    Previous
-                </button>
-                <span style={{ margin: '0 12px' }}>Page {currentPage + 1} of {totalPages}</span>
-                <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))} disabled={currentPage >= totalPages - 1}>
-                    Next
-                </button>
-            </div>
+            {!searchTerm && (
+                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                    <button
+                        onClick={() => setPage((p) => Math.max(p - 1, 0))}
+                        disabled={page === 0}
+                    >
+                        Previous
+                    </button>
+                    <span style={{ margin: '0 10px' }}>
+            Page {page + 1} of {totalPages}
+          </span>
+                    <button
+                        onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+                        disabled={page + 1 === totalPages}
+                    >
+                        Next
+                    </button>
+                    <button style={{ marginLeft: '20px' }} onClick={toggleSortDirection}>
+                        Sort: {sortDir.toUpperCase()}
+                    </button>
+                </div>
+            )}
         </div>
     )
 }
