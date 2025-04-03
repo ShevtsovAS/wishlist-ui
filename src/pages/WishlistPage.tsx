@@ -18,27 +18,44 @@ const WishlistPage = () => {
     const [wishes, setWishes] = useState<Wish[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
+    const [currentPage, setCurrentPage] = useState(0)
+    const [totalPages, setTotalPages] = useState(1)
+    const pageSize = 5
+
+    const fetchWishes = async (page = 0) => {
+        const token = localStorage.getItem('token')
+        try {
+            const response = await axios.get('/api/wishes', {
+                params: {
+                    page,
+                    size: pageSize,
+                    sort: 'createdAt,desc'
+                },
+                headers: { Authorization: `Bearer ${token}` },
+            })
+
+            const { wishes, totalPages, currentPage } = response.data
+            setWishes(wishes)
+            setTotalPages(totalPages)
+            setCurrentPage(currentPage)
+        } catch (err: any) {
+            console.error(err)
+            setError('Failed to fetch wishes')
+        } finally {
+            setLoading(false)
+        }
+    }
 
     useEffect(() => {
-        const fetchWishes = async () => {
-            const token = localStorage.getItem('token')
-            try {
-                const response = await axios.get('/api/wishes', {
-                    headers: { Authorization: `Bearer ${token}` },
-                })
+        fetchWishes(currentPage)
+    }, [currentPage])
 
-                const data = response.data?.wishes || []
-                setWishes(data)
-            } catch (err: any) {
-                console.error(err)
-                setError('Failed to fetch wishes')
-            } finally {
-                setLoading(false)
-            }
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 0 && newPage < totalPages) {
+            setLoading(true)
+            setCurrentPage(newPage)
         }
-
-        fetchWishes()
-    }, [])
+    }
 
     if (loading) return <p style={{ textAlign: 'center' }}>Loading...</p>
     if (error) return <p style={{ textAlign: 'center', color: 'red' }}>{error}</p>
@@ -74,6 +91,27 @@ const WishlistPage = () => {
                 ))}
                 </tbody>
             </table>
+
+            {/* Pagination Controls */}
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 0}
+                    style={{ marginRight: 10 }}
+                >
+                    ◀ Prev
+                </button>
+                <span>
+          Page {currentPage + 1} of {totalPages}
+        </span>
+                <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage + 1 >= totalPages}
+                    style={{ marginLeft: 10 }}
+                >
+                    Next ▶
+                </button>
+            </div>
         </div>
     )
 }
