@@ -2,42 +2,38 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import './WishlistPage.css'
 
-interface Wish {
-    id: number
-    title: string
-    description: string
-    completed: boolean
-    priority: number
-    category: string
-    dueDate: string
-    completedAt: string | null
-    createdAt: string
-}
-
 const WishlistPage = () => {
-    const [wishes, setWishes] = useState<Wish[]>([])
+    const [wishes, setWishes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const [currentPage, setCurrentPage] = useState(0)
-    const [totalPages, setTotalPages] = useState(1)
-    const pageSize = 5
+    const [totalPages, setTotalPages] = useState(0)
 
-    const fetchWishes = async (page = 0) => {
+    const [sortBy, setSortBy] = useState('createdAt')
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+
+    const pageSize = 10
+
+    const fetchWishes = async (page: number) => {
         const token = localStorage.getItem('token')
+        setLoading(true)
+
         try {
             const response = await axios.get('/api/wishes', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
                 params: {
                     page,
                     size: pageSize,
-                    sort: 'createdAt,desc'
-                },
-                headers: { Authorization: `Bearer ${token}` },
+                    sort: sortBy,
+                    direction: sortDir
+                }
             })
 
-            const { wishes, totalPages, currentPage } = response.data
-            setWishes(wishes)
-            setTotalPages(totalPages)
-            setCurrentPage(currentPage)
+            setWishes(response.data.wishes || [])
+            setTotalPages(response.data.totalPages)
+            setCurrentPage(response.data.currentPage)
         } catch (err: any) {
             console.error(err)
             setError('Failed to fetch wishes')
@@ -48,21 +44,34 @@ const WishlistPage = () => {
 
     useEffect(() => {
         fetchWishes(currentPage)
-    }, [currentPage])
+    }, [currentPage, sortBy, sortDir])
 
-    const handlePageChange = (newPage: number) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            setLoading(true)
-            setCurrentPage(newPage)
-        }
-    }
-
-    if (loading) return <p style={{ textAlign: 'center' }}>Loading...</p>
-    if (error) return <p style={{ textAlign: 'center', color: 'red' }}>{error}</p>
+    if (loading) return <p>Loading...</p>
+    if (error) return <p>{error}</p>
 
     return (
         <div className="wishlist-container">
             <h2>My Wishlist</h2>
+
+            {/* Сортировка */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <div>
+                    <label style={{ marginRight: 8 }}>Sort by:</label>
+                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                        <option value="createdAt">Created At</option>
+                        <option value="priority">Priority</option>
+                        <option value="dueDate">Due Date</option>
+                    </select>
+                </div>
+                <div>
+                    <label style={{ marginRight: 8 }}>Direction:</label>
+                    <select value={sortDir} onChange={(e) => setSortDir(e.target.value as 'asc' | 'desc')}>
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
+                    </select>
+                </div>
+            </div>
+
             <table className="wishlist-table">
                 <thead>
                 <tr>
@@ -81,35 +90,25 @@ const WishlistPage = () => {
                     <tr key={wish.id}>
                         <td>{wish.title}</td>
                         <td>{wish.description}</td>
-                        <td>{wish.completed ? '✔️' : '❌'}</td>
+                        <td>{wish.completed ? 'Yes' : 'No'}</td>
                         <td>{wish.priority}</td>
                         <td>{wish.category}</td>
-                        <td>{new Date(wish.dueDate).toLocaleDateString()}</td>
-                        <td>{wish.completedAt ? new Date(wish.completedAt).toLocaleDateString() : '-'}</td>
-                        <td>{new Date(wish.createdAt).toLocaleDateString()}</td>
+                        <td>{wish.dueDate?.slice(0, 10)}</td>
+                        <td>{wish.completedAt?.slice(0, 10) || '-'}</td>
+                        <td>{wish.createdAt?.slice(0, 10)}</td>
                     </tr>
                 ))}
                 </tbody>
             </table>
 
-            {/* Pagination Controls */}
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 0}
-                    style={{ marginRight: 10 }}
-                >
-                    ◀ Prev
+            {/* Пагинация */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))} disabled={currentPage === 0}>
+                    Previous
                 </button>
-                <span>
-          Page {currentPage + 1} of {totalPages}
-        </span>
-                <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage + 1 >= totalPages}
-                    style={{ marginLeft: 10 }}
-                >
-                    Next ▶
+                <span style={{ margin: '0 12px' }}>Page {currentPage + 1} of {totalPages}</span>
+                <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))} disabled={currentPage >= totalPages - 1}>
+                    Next
                 </button>
             </div>
         </div>
