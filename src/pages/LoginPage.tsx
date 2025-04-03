@@ -33,7 +33,7 @@ const LoginPage = () => {
 
     return (
         <div className="login-container">
-            <h2>LOG IN</h2>
+            <h2>Login</h2>
             <form className="login-form" onSubmit={handleSubmit}>
                 <div className="input-group">
                     <input
