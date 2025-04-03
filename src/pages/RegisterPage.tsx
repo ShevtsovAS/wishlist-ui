@@ -2,23 +2,25 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import './LoginPage.css'
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 
 const RegisterPage = () => {
     const [email, setEmail] = useState('')
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    const navigate = useNavigate()
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault()
 
         try {
-            await axios.post('http://localhost:8080/api/auth/register', {
+            await axios.post('/api/auth/signup', {
                 email,
                 username,
                 password,
             })
 
-            alert('Registration successful! You can now log in.')
+            navigate('/login')
         } catch (error) {
             console.error('Registration error:', error)
             alert('Registration failed. Please try again.')
