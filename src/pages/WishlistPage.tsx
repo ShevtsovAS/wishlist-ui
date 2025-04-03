@@ -8,11 +8,19 @@ const WishlistPage = () => {
     const [error, setError] = useState('')
     const [page, setPage] = useState(0)
     const [totalPages, setTotalPages] = useState(0)
-    const [, setTotalItems] = useState(0)
+    const [totalItems, setTotalItems] = useState(0)
     const [pageSize] = useState(10)
     const [sortBy, setSortBy] = useState('createdAt')
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
     const [searchTerm, setSearchTerm] = useState('')
+
+    const [newWish, setNewWish] = useState({
+        title: '',
+        description: '',
+        priority: 1,
+        category: '',
+        dueDate: ''
+    })
 
     useEffect(() => {
         fetchWishes()
@@ -66,8 +74,25 @@ const WishlistPage = () => {
     }
 
     const handleSortChange = (newSort: string) => {
-        setSortBy(newSort)
-        setSortDir('asc') // reset to ascending when changing column
+        if (sortBy === newSort) {
+            toggleSortDirection()
+        } else {
+            setSortBy(newSort)
+            setSortDir('asc')
+        }
+    }
+
+    const handleAddWish = async () => {
+        const token = localStorage.getItem('token')
+        try {
+            await axios.post('/api/wishes', newWish, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            setNewWish({ title: '', description: '', priority: 1, category: '', dueDate: '' })
+            fetchWishes()
+        } catch (err) {
+            console.error('Failed to add wish', err)
+        }
     }
 
     if (loading) return <p>Loading...</p>
@@ -85,6 +110,15 @@ const WishlistPage = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 <button onClick={handleSearch}>Search</button>
+            </div>
+
+            <div className="add-wish-form">
+                <input type="text" placeholder="Title" value={newWish.title} onChange={(e) => setNewWish({ ...newWish, title: e.target.value })} />
+                <input type="text" placeholder="Description" value={newWish.description} onChange={(e) => setNewWish({ ...newWish, description: e.target.value })} />
+                <input type="number" placeholder="Priority" value={newWish.priority} onChange={(e) => setNewWish({ ...newWish, priority: parseInt(e.target.value) })} />
+                <input type="text" placeholder="Category" value={newWish.category} onChange={(e) => setNewWish({ ...newWish, category: e.target.value })} />
+                <input type="datetime-local" value={newWish.dueDate} onChange={(e) => setNewWish({ ...newWish, dueDate: e.target.value })} />
+                <button onClick={handleAddWish}>+ Add Wish</button>
             </div>
 
             {searchTerm && (
@@ -130,8 +164,8 @@ const WishlistPage = () => {
                         Previous
                     </button>
                     <span style={{ margin: '0 10px' }}>
-            Page {page + 1} of {totalPages}
-          </span>
+                        Page {page + 1} of {totalPages} (Total: {totalItems})
+                    </span>
                     <button
                         onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
                         disabled={page + 1 === totalPages}

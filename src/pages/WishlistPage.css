@@ -71,3 +71,108 @@
 .wishlist-actions button:hover {
     background-color: #fbc02d;
 }
+
+.add-wish-btn {
+    padding: 8px 14px;
+    background: #4caf50;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.add-wish-btn:hover {
+    background-color: #45a049;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 400px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.modal-content form input,
+.modal-content form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.submit-btn {
+    padding: 8px 14px;
+    margin-right: 10px;
+    background: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.cancel-btn {
+    padding: 8px 14px;
+    background: #ccc;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.add-wish-form,
+.filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1;
+    min-width: 300px;
+}
+
+.add-wish-form input,
+.filter-form input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.add-wish-form button {
+    padding: 8px 12px;
+    border: none;
+    background-color: #fca311;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.add-wish-form button:hover {
+    background-color: #e89200;
+}
+
