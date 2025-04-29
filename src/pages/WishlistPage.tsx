@@ -22,6 +22,9 @@ const WishlistPage = () => {
         dueDate: ''
     })
 
+    const [editingWishId, setEditingWishId] = useState<number | null>(null);
+    const [editedWish, setEditedWish] = useState<any | null>(null);
+
     useEffect(() => {
         fetchWishes()
     }, [page, sortBy, sortDir])
@@ -56,6 +59,7 @@ const WishlistPage = () => {
                 setTotalItems(response.data.totalItems)
                 setTotalPages(response.data.totalPages)
             }
+            setError('')
         } catch (err: any) {
             console.error(err)
             setError('Failed to fetch wishes')
@@ -90,13 +94,66 @@ const WishlistPage = () => {
             })
             setNewWish({ title: '', description: '', priority: 1, category: '', dueDate: '' })
             fetchWishes()
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to add wish', err)
+            setError('Failed to add wish')
+        }
+    }
+
+    const startEditing = (wish: any) => {
+        setEditingWishId(wish.id);
+        setEditedWish({ ...wish });
+    };
+
+    const cancelEditing = () => {
+        setEditingWishId(null);
+        setEditedWish(null);
+    };
+
+    const saveEditedWish = async () => {
+        if (!editedWish) return;
+        const token = localStorage.getItem('token');
+        try {
+            await axios.put(`/api/wishes/${editedWish.id}`, editedWish, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setEditingWishId(null);
+            setEditedWish(null);
+            fetchWishes();
+            setError('')
+        } catch (err: any) {
+            console.error('Failed to update wish', err);
+            setError('Failed to update wish: ' + (err.response?.data?.message || 'Unknown error'));
+        }
+    };
+
+    const markWishAsCompleted = async (id: number) => {
+        const token = localStorage.getItem('token')
+        try {
+            await axios.patch(`/api/wishes/${id}/complete`, {}, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            fetchWishes()
+        } catch (err) {
+            console.error('Failed to complete wish', err)
+            setError('Failed to complete wish')
+        }
+    }
+
+    const deleteWish = async (id: number) => {
+        const token = localStorage.getItem('token')
+        try {
+            await axios.delete(`/api/wishes/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            fetchWishes()
+        } catch (err) {
+            console.error('Failed to delete wish', err)
+            setError('Failed to delete wish')
         }
     }
 
     if (loading) return <p>Loading...</p>
-    if (error) return <p>{error}</p>
 
     return (
         <div className="wishlist-container">
@@ -121,11 +178,16 @@ const WishlistPage = () => {
                 <button onClick={handleAddWish}>+ Add Wish</button>
             </div>
 
+            {error && (
+                <div style={{ color: 'red', textAlign: 'center', margin: '10px 0' }}>{error}</div>
+            )}
+
             {searchTerm && (
                 <div style={{ textAlign: 'center', marginTop: '10px', color: '#555' }}>
                     🔍 Showing search results for: <strong>{searchTerm}</strong>
                 </div>
             )}
+
             <table className="wishlist-table">
                 <thead>
                 <tr>
@@ -137,19 +199,49 @@ const WishlistPage = () => {
                     <th onClick={() => handleSortChange('dueDate')}>Due Date</th>
                     <th>Completed At</th>
                     <th onClick={() => handleSortChange('createdAt')}>Created At</th>
+                    <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
                 {wishes.map((wish) => (
                     <tr key={wish.id}>
-                        <td>{wish.title}</td>
-                        <td>{wish.description}</td>
-                        <td>{wish.completed ? '✅' : '❌'}</td>
-                        <td>{wish.priority}</td>
-                        <td>{wish.category}</td>
-                        <td>{wish.dueDate?.slice(0, 16).replace('T', ' ')}</td>
-                        <td>{wish.completedAt?.slice(0, 16).replace('T', ' ') || '-'}</td>
-                        <td>{wish.createdAt?.slice(0, 16).replace('T', ' ')}</td>
+                        {editingWishId === wish.id ? (
+                            <>
+                                <td><input type="text" value={editedWish.title} onChange={(e) => setEditedWish({ ...editedWish, title: e.target.value })} /></td>
+                                <td><input type="text" value={editedWish.description} onChange={(e) => setEditedWish({ ...editedWish, description: e.target.value })} /></td>
+                                <td>
+                                    <input type="checkbox" checked={editedWish.completed} onChange={(e) => setEditedWish({ ...editedWish, completed: e.target.checked })} />
+                                </td>
+                                <td><input type="number" value={editedWish.priority} onChange={(e) => setEditedWish({ ...editedWish, priority: parseInt(e.target.value) })} /></td>
+                                <td><input type="text" value={editedWish.category} onChange={(e) => setEditedWish({ ...editedWish, category: e.target.value })} /></td>
+                                <td><input type="datetime-local" value={editedWish.dueDate?.slice(0, 16)} onChange={(e) => setEditedWish({ ...editedWish, dueDate: e.target.value })} /></td>
+                                <td>{editedWish.completedAt ? editedWish.completedAt.slice(0, 16).replace('T', ' ') : '-'}</td>
+                                <td>{editedWish.createdAt?.slice(0, 16).replace('T', ' ')}</td>
+                                <td>
+                                    <button onClick={saveEditedWish}>💾</button>
+                                    <button onClick={cancelEditing}>❌</button>
+                                </td>
+                            </>
+                        ) : (
+                            <>
+                                <td>{wish.title}</td>
+                                <td>{wish.description}</td>
+                                <td>
+                                    {wish.completed ? '✅' : (
+                                        <button onClick={() => markWishAsCompleted(wish.id)}>Mark as Done</button>
+                                    )}
+                                </td>
+                                <td>{wish.priority}</td>
+                                <td>{wish.category}</td>
+                                <td>{wish.dueDate?.slice(0, 16).replace('T', ' ')}</td>
+                                <td>{wish.completedAt?.slice(0, 16).replace('T', ' ') || '-'}</td>
+                                <td>{wish.createdAt?.slice(0, 16).replace('T', ' ')}</td>
+                                <td>
+                                    <button onClick={() => startEditing(wish)}>✏️</button>
+                                    <button onClick={() => deleteWish(wish.id)}>🗑️</button>
+                                </td>
+                            </>
+                        )}
                     </tr>
                 ))}
                 </tbody>
@@ -157,19 +249,11 @@ const WishlistPage = () => {
 
             {!searchTerm && (
                 <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                    <button
-                        onClick={() => setPage((p) => Math.max(p - 1, 0))}
-                        disabled={page === 0}
-                    >
+                    <button onClick={() => setPage((p) => Math.max(p - 1, 0))} disabled={page === 0}>
                         Previous
                     </button>
-                    <span style={{ margin: '0 10px' }}>
-                        Page {page + 1} of {totalPages} (Total: {totalItems})
-                    </span>
-                    <button
-                        onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
-                        disabled={page + 1 === totalPages}
-                    >
+                    <span style={{ margin: '0 10px' }}>Page {page + 1} of {totalPages} (Total: {totalItems})</span>
+                    <button onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))} disabled={page + 1 === totalPages}>
                         Next
                     </button>
                     <button style={{ marginLeft: '20px' }} onClick={toggleSortDirection}>
