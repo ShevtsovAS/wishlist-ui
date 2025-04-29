@@ -1,78 +1,145 @@
-# React + TypeScript + Vite
+# Wishlist Frontend (React + Vite + TypeScript)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A frontend application for the **Wishlist Service**, built using **React**, **Vite**, **TypeScript**, and **Docker**.
 
-Currently, two official plugins are available:
+Provides user authentication (login/register) and wishlist management (create, edit, delete, complete tasks).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- ⚡ Built with **Vite** for fast development
+- 🎨 **React + TypeScript** architecture
+- 🐳 Fully containerized with **Docker**
+- 🔥 Proxy setup to communicate with backend API
+- 📦 Environment variables support (`.env`)
+- 🖥️ Deployment-ready static frontend (served by **Nginx**)
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Prerequisites
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Node.js (only if you want to run locally without Docker)
+- Docker + Docker Compose
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+---
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and adjust values as needed:
+Create `.env` file:
 
 ```bash
   cp .env.example .env
 ```
 
-| Variable         | Description                     | Default                       |
-|------------------|---------------------------------|-------------------------------|
-| `VITE_API_URL`   | Backend API base URL            | `http://localhost:8080/api`   |
-| `VITE_APP_TITLE` | App title shown in browser tab  | `Wishlist App`                |
+| Variable         | Description                          | Default                      |
+|------------------|--------------------------------------|-------------------------------|
+| `VITE_API_URL`   | Backend API base URL                 | `http://localhost:8080/api`   |
+| `VITE_APP_TITLE` | App title shown in browser tab       | `Wishlist App`                |
 
-## Project Setup
+Example `.env`:
 
-```bash
-  npm install
-  npm run dev
+```
+VITE_API_URL=http://localhost:8080/api
+VITE_APP_TITLE=Wishlist App
 ```
 
-Access the app at [http://localhost:5173](http://localhost:5173).
+---
 
-Make sure the backend is running and available at the API URL configured in `.env`.
+## Local Development (Vite dev server)
+
+# Install dependencies
+```bash
+  npm install
+
+# Start local dev server
+npm run dev
+```
+
+Visit: [http://localhost:5173](http://localhost:5173)
+
+> ⚠️ Make sure your backend is running on `http://localhost:8080`.
+
+---
+
+## Running with Docker (Production build)
+
+To build and run the production version via Docker:
+
+# Build and start
+```bash
+  docker compose -f docker-compose.frontend.yml up -d --build
+```
+
+Access the app at: [http://localhost:3000](http://localhost:3000)
+
+### To stop and remove containers:
+
+```bash
+  docker compose -f docker-compose.frontend.yml down -v
+```
+
+---
+
+## Project Structure
+
+```
+/src
+  /pages
+    LoginPage.tsx
+    RegisterPage.tsx
+    WishlistPage.tsx
+  /routes
+    PrivateRoute.tsx
+  /components
+    (optional: reusable components)
+  /styles
+    (optional: CSS files)
+  App.tsx
+  main.tsx
+public/
+vite.config.ts
+Dockerfile
+docker-compose.frontend.yml
+nginx.conf
+.env.example
+```
+
+---
+
+## Notes
+
+- Proxy for API requests is configured in `nginx.conf` when running production build with Docker.
+- During development (`npm run dev`), Vite proxy (`vite.config.ts`) automatically redirects `/api` requests to backend.
+- CORS settings are handled on the backend.
+
+---
+
+## TODO (Future Improvements)
+
+- Responsive design enhancements (Mobile/tablets)
+- User profile management
+- Frontend error boundaries and better UX for failed requests
+- CI/CD pipeline for automatic deployment
+- PWA support for offline functionality
+
+---
+
+## Helpful Commands
+
+```bash
+  # Build production files locally
+npm run build
+
+# Preview production build locally
+npm run preview
+
+# Format code
+npm run format
+
+# Lint code
+npm run lint
+```
+
+---
+
